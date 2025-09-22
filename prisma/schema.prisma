@@ -42,7 +42,7 @@ enum Plan {
 // -------- MODELS --------
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id                  // Clerk user ID
   name      String?
   email     String   @unique
   image     String?
@@ -50,13 +50,13 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  memberships Membership[]
-  tasks       Task[]       @relation("UserTasks")
-  comments    Comment[]
-  activities  Activity[]
-  files       File[]
-  ownedTeams  Team[]       @relation("TeamOwner")
-  assignedLeads Lead[]     @relation("UserLeads")
+  memberships   Membership[]
+  tasks         Task[]       @relation("UserTasks")
+  comments      Comment[]
+  activities    Activity[]
+  files         File[]
+  ownedTeams    Team[]       @relation("TeamOwner")
+  assignedLeads Lead[]       @relation("UserLeads")
 }
 
 model Team {
@@ -113,7 +113,7 @@ model Lead {
   value       Float?
   teamId      String
   customerId  String
-  assignedTo  String?
+  assignedTo  String?      // Clerk user ID
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isDeleted   Boolean  @default(false)
@@ -138,7 +138,7 @@ model Task {
   dueDate     DateTime?
   teamId      String
   leadId      String?
-  assignedTo  String?
+  assignedTo  String?     // Clerk user ID
   createdAt   DateTime @default(now())
   isDeleted   Boolean  @default(false)
 
@@ -146,7 +146,7 @@ model Task {
   lead     Lead?  @relation(fields: [leadId], references: [id])
   assignee User?  @relation("UserTasks", fields: [assignedTo], references: [id])
   comments Comment[]
-  files    File[] 
+  files    File[]
 
   @@index([teamId])
   @@index([leadId])
@@ -155,7 +155,7 @@ model Task {
 model Comment {
   id        String   @id @default(uuid())
   content   String
-  userId    String
+  userId    String      // Clerk user ID
   leadId    String?
   taskId    String?
   createdAt DateTime @default(now())
@@ -168,7 +168,7 @@ model Comment {
 model File {
   id         String   @id @default(uuid())
   url        String
-  uploadedBy String
+  uploadedBy String     // Clerk user ID
   leadId     String?
   taskId     String?
   createdAt  DateTime @default(now())
@@ -183,7 +183,7 @@ model Activity {
   type      ActivityType
   notes     String?
   leadId    String
-  createdBy String
+  createdBy String        // Clerk user ID
   createdAt DateTime @default(now())
 
   lead Lead @relation(fields: [leadId], references: [id])
