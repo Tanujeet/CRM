@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,198 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// -------- ENUMS --------
+enum Role {
+  ADMIN
+  MANAGER
+  SALES
+  MEMBER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  NEGOTIATION
+  CLOSED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  MEETING
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// -------- MODELS --------
+
+model User {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String   @unique
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  memberships Membership[]
+  tasks       Task[]       @relation("UserTasks")
+  comments    Comment[]
+  activities  Activity[]
+  files       File[]
+  ownedTeams  Team[]       @relation("TeamOwner")
+  assignedLeads Lead[]     @relation("UserLeads")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  plan      Plan     @default(FREE)
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner        User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  memberships  Membership[]
+  customers    Customer[]
+  leads        Lead[]
+  tasks        Task[]
+  subscription Subscription?
+
+  @@index([ownerId])
+}
+
+model Membership {
+  id     String @id @default(uuid())
+  role   Role   @default(MEMBER)
+  userId String
+  teamId String
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?  @unique
+  phone     String?
+  company   String?
+  teamId    String
+  createdAt DateTime @default(now())
+  isDeleted Boolean  @default(false)
+
+  team  Team   @relation(fields: [teamId], references: [id])
+  leads Lead[]
+
+  @@index([teamId])
+}
+
+model Lead {
+  id          String      @id @default(uuid())
+  status      LeadStatus  @default(NEW)
+  value       Float?
+  teamId      String
+  customerId  String
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isDeleted   Boolean  @default(false)
+
+  team      Team     @relation(fields: [teamId], references: [id])
+  customer  Customer @relation(fields: [customerId], references: [id])
+  assignee  User?    @relation("UserLeads", fields: [assignedTo], references: [id])
+  tasks     Task[]
+  activities Activity[]
+  comments  Comment[]
+  files     File[]
+
+  @@index([teamId])
+  @@index([customerId])
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  status      TaskStatus @default(PENDING)
+  dueDate     DateTime?
+  teamId      String
+  leadId      String?
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  isDeleted   Boolean  @default(false)
+
+  team     Team   @relation(fields: [teamId], references: [id])
+  lead     Lead?  @relation(fields: [leadId], references: [id])
+  assignee User?  @relation("UserTasks", fields: [assignedTo], references: [id])
+  comments Comment[]
+  files    File[] 
+
+  @@index([teamId])
+  @@index([leadId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  leadId    String?
+  taskId    String?
+  createdAt DateTime @default(now())
+
+  user User  @relation(fields: [userId], references: [id])
+  lead Lead? @relation(fields: [leadId], references: [id])
+  task Task? @relation(fields: [taskId], references: [id])
+}
+
+model File {
+  id         String   @id @default(uuid())
+  url        String
+  uploadedBy String
+  leadId     String?
+  taskId     String?
+  createdAt  DateTime @default(now())
+
+  uploader User  @relation(fields: [uploadedBy], references: [id])
+  lead     Lead? @relation(fields: [leadId], references: [id])
+  task     Task? @relation(fields: [taskId], references: [id])
+}
+
+model Activity {
+  id        String       @id @default(uuid())
+  type      ActivityType
+  notes     String?
+  leadId    String
+  createdBy String
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id])
+  user User @relation(fields: [createdBy], references: [id])
+}
+
+model Subscription {
+  id               String   @id @default(uuid())
+  teamId           String   @unique
+  stripeCustomerId String
+  plan             Plan     @default(FREE)
+  status           String   @default("active")
+  currentPeriodEnd DateTime
+
+  team Team @relation(fields: [teamId], references: [id])
 }
