@@ -32,16 +32,32 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
   const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorised", { status: 403 });
   }
+  const { id } = await paramsPromise;
 
   try {
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      return new NextResponse("No User Found", { status: 404 });
+    }
+
+    const deleteUser = await prisma.user.delete({
+      where: { id: userId },
+    });
+    return NextResponse.json(deleteUser);
   } catch (e) {
-    console.error("Failed to update users");
-    return new NextResponse("Failed to update Users", {
+    console.error("Failed to Delete User");
+    return new NextResponse("Failed to Delete User", {
       status: 500,
     });
   }
