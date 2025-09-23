@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(createUser);
   } catch (e) {
-    console.error("Failed to  Post data", e);
-    return new NextResponse("Failed to Post users", { status: 500 });
+    console.error("Failed to Create data", e);
+    return new NextResponse("Failed to Create users", { status: 500 });
   }
 }
