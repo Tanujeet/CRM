@@ -27,3 +27,33 @@ export async function GET(req: Request) {
     return new NextResponse("Failed to get teams", { status: 500 });
   }
 }
+
+
+
+export async function POST(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  const { name, plan } = await req.json();
+
+  if (!name) {
+    return new NextResponse("Name doesnt exist", { status: 400 });
+  }
+  try {
+    const newTeam = await prisma.team.create({
+      data: {
+        name,
+        ownerId: userId,
+        plan: plan || "FREE",
+        memberships: { create: { userId: userId, role: "ADMIN" } },
+      },
+      include: { memberships: true },
+    });
+
+    return NextResponse.json(newTeam);
+  } catch (e) {
+    console.error("Failed to create Teams", e);
+    return new NextResponse("Failed to create teams", { status: 500 });
+  }
+}
