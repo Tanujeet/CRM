@@ -34,3 +34,47 @@ export async function GET(
     return new NextResponse("Failed to fetch single Team", { status: 500 });
   }
 }
+
+
+
+export async function PATCH(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("unauthorized", { status: 403 });
+  }
+  const { id } = await paramsPromise;
+  try {
+    const team = await prisma.team.findUnique({
+      where: { id },
+    });
+    if (!team) {
+      return new NextResponse("Team not found", { status: 404 });
+    }
+
+    const membership = await prisma.membership.findFirst({
+      where: { userId, role: "ADMIN" },
+    });
+    if (membership?.role !== "ADMIN" && team.ownerId !== userId) {
+      return 403;
+    }
+  } catch (e) {
+    console.error("Failed to update Team", e);
+    return new NextResponse("Failed to update Team", { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("unauthorized", { status: 403 });
+  }
+
+  try {
+  } catch (e) {
+    console.error("Failed to delete Team", e);
+    return new NextResponse("Failed to delete Team", { status: 500 });
+  }
+}
