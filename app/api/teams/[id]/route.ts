@@ -36,35 +36,51 @@ export async function GET(
 }
 
 
-
 export async function PATCH(
   req: Request,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
 ) {
   const { userId } = await auth();
   if (!userId) {
-    return new NextResponse("unauthorized", { status: 403 });
+    return new NextResponse("Unauthorized", { status: 403 });
   }
+
   const { id } = await paramsPromise;
+  const { name, plan } = await req.json();
+
   try {
     const team = await prisma.team.findUnique({
       where: { id },
     });
+
     if (!team) {
       return new NextResponse("Team not found", { status: 404 });
     }
 
     const membership = await prisma.membership.findFirst({
-      where: { userId, role: "ADMIN" },
+      where: { userId, teamId: id },
     });
+
     if (membership?.role !== "ADMIN" && team.ownerId !== userId) {
-      return 403;
+      return new NextResponse("Forbidden", { status: 403 });
     }
+
+    const updatedTeam = await prisma.team.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(plan && { plan }),
+      },
+    });
+
+    return NextResponse.json(updatedTeam);
   } catch (e) {
     console.error("Failed to update Team", e);
     return new NextResponse("Failed to update Team", { status: 500 });
   }
 }
+
+
 
 export async function DELETE(req: Request) {
   const { userId } = await auth();
