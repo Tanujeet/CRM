@@ -82,13 +82,30 @@ export async function PATCH(
 
 
 
-export async function DELETE(req: Request) {
+export async function DELETE(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
   const { userId } = await auth();
   if (!userId) {
     return new NextResponse("unauthorized", { status: 403 });
   }
-
+  const { id } = await paramsPromise;
   try {
+    const team = await prisma.team.findUnique({
+      where: { id },
+    });
+    if (!team) {
+      return new NextResponse("Team not found", { status: 404 });
+    }
+    if (team.ownerId !== userId) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    const deleteTeam = await prisma.team.delete({
+      where: { id },
+    });
+    return NextResponse.json(deleteTeam);
   } catch (e) {
     console.error("Failed to delete Team", e);
     return new NextResponse("Failed to delete Team", { status: 500 });
