@@ -9,9 +9,17 @@ export async function GET(req: Request) {
   }
 
   try {
-    const getCustomers = await prisma.customer.findMany({
-      where: { team: { memberships: { some: { userId } } }, isDeleted: false },
-    });
+       const memberships = await prisma.membership.findMany({
+         where: { userId },
+         select: { teamId: true },
+       });
+       const teamIds = memberships.map((m) => m.teamId);
+       const getCustomers = await prisma.customer.findMany({
+         where: {
+           teamId: { in: teamIds },
+           isDeleted: false,
+         },
+       });
     return NextResponse.json(getCustomers);
   } catch (err) {
     console.error("Failed to fetch customers", err);
