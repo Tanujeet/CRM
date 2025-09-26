@@ -13,7 +13,10 @@ export async function GET(req: Request) {
          where: { userId },
          select: { teamId: true },
        });
-       const teamIds = memberships.map((m) => m.teamId);
+    
+    
+    const teamIds = memberships.map((m) => m.teamId);
+    
        const getCustomers = await prisma.customer.findMany({
          where: {
            teamId: { in: teamIds },
