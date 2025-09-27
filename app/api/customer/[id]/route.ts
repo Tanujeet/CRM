@@ -60,6 +60,25 @@ export async function PATCH(
     if (!customer || customer.isDeleted) {
       return new NextResponse("Customer not found", { status: 404 });
     }
+
+    const membership = await prisma.membership.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+
+    const teamIds = membership.map((m) => m.teamId);
+
+    if (!teamIds.includes(customer.teamId)) {
+      return new NextResponse("Forbidden: Not part of this team", {
+        status: 403,
+      });
+    }
+
+    const updateCustomer = await prisma.customer.update({
+      where: { id },
+      data: { name, email, phone, company },
+    });
+    return NextResponse.json(updateCustomer);
   } catch (err) {
     console.error("Failed to update customer", err);
     return new NextResponse("Failed to update customer", { status: 500 });
