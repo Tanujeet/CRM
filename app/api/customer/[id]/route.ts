@@ -42,12 +42,24 @@ export async function GET(
 }
 
 
-export async function PATCH(req: Request) {
+export async function PATCH(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
   const { userId } = await auth();
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
+  const { id } = await paramsPromise;
+
+  const { name, email, phone, company } = await req.json();
+
   try {
+    const customer = await prisma.customer.findUnique({ where: { id } });
+
+    if (!customer || customer.isDeleted) {
+      return new NextResponse("Customer not found", { status: 404 });
+    }
   } catch (err) {
     console.error("Failed to update customer", err);
     return new NextResponse("Failed to update customer", { status: 500 });
