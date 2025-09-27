@@ -42,7 +42,17 @@ export async function GET(
 }
 
 
-
+export async function PATCH(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  try {
+  } catch (err) {
+    console.error("Failed to update customer", err);
+    return new NextResponse("Failed to update customer", { status: 500 });
+  }
+}
 
 
 
