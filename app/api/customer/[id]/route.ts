@@ -73,12 +73,18 @@ export async function PATCH(
         status: 403,
       });
     }
+    const data: any = {};
+    if (name !== undefined) data.name = name;
+    if (email !== undefined) data.email = email;
+    if (phone !== undefined) data.phone = phone;
+    if (company !== undefined) data.company = company;
 
-    const updateCustomer = await prisma.customer.update({
+    const updatedCustomer = await prisma.customer.update({
       where: { id },
-      data: { name, email, phone, company },
+      data,
     });
-    return NextResponse.json(updateCustomer);
+
+    return NextResponse.json(updatedCustomer);
   } catch (err) {
     console.error("Failed to update customer", err);
     return new NextResponse("Failed to update customer", { status: 500 });
