@@ -55,7 +55,36 @@ export async function POST(req: Request) {
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
+  const { status, value, teamId, customerId, assignedTo } = await req.json();
   try {
+    const memberships = await prisma.membership.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = memberships.map((m) => m.teamId);
+
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+    if (!customer || customer.isDeleted || customer.teamId !== teamId) {
+      return new NextResponse("Customer not found", { status: 404 });
+    }
+
+    if (assignedTo) {
+      const assignedMembership = await prisma.membership.findFirst({
+        where: { userId: assignedTo, teamId },
+      });
+      if (!assignedMembership) {
+        return new NextResponse("Assigned user not part of this team", {
+          status: 403,
+        });
+      }
+    }
+
+    const newLead = await prisma.lead.create({
+      data: { status: status || "NEW", value, teamId, customerId, assignedTo },
+    });
+    return NextResponse.json(newLead);
   } catch (err) {
     console.error("Failed to update leads", err);
     return new NextResponse("Failed to update leads", { status: 500 });
