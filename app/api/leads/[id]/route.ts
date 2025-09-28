@@ -1,6 +1,69 @@
+import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: Request)
-{const {userId}=await auth()
-    
+export async function GET(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  const { id } = await paramsPromise;
+  try {
+    const lead = await prisma.lead.findUnique({ where: { id } });
+
+    if (!lead || lead.isDeleted) {
+      return new NextResponse("Lead not found", { status: 404 });
+    }
+
+    const memberships = await prisma.membership.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = memberships.map((m) => m.teamId);
+    if (!teamIds.includes(lead.teamId)) {
+      return new NextResponse("Forbidden: Not part of this team", {
+        status: 403,
+      });
+    }
+
+    return NextResponse.json(lead);
+  } catch (err) {
+    console.error("Failed to get one lead", err);
+    return new NextResponse("Failed to get one lead", { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  const { id } = await paramsPromise;
+  try {
+  } catch (err) {
+    console.error("Failed to get one lead", err);
+    return new NextResponse("Failed to get one lead", { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params: paramsPromise }: { params: Promise<{ id: string }> }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  const { id } = await paramsPromise;
+  try {
+  } catch (err) {
+    console.error("Failed to get one lead", err);
+    return new NextResponse("Failed to get one lead", { status: 500 });
+  }
 }
