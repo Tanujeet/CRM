@@ -85,6 +85,11 @@ export async function DELETE(
   }
   const { id } = await paramsPromise;
   try {
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    if (!lead || lead.isDeleted) {
+      return new NextResponse("Lead not found", { status: 404 });
+    }
+
   } catch (err) {
     console.error("Failed to get one lead", err);
     return new NextResponse("Failed to get one lead", { status: 500 });
