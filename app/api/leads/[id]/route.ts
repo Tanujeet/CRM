@@ -101,8 +101,11 @@ export async function DELETE(
         status: 403,
       });
     }
-
-
+const deleteLeads = await prisma.lead.update({
+  where: { id },
+  data: { isDeleted: true },
+});
+return NextResponse.json(deleteLeads);
   } catch (err) {
     console.error("Failed to get one lead", err);
     return new NextResponse("Failed to get one lead", { status: 500 });
