@@ -85,10 +85,23 @@ export async function DELETE(
   }
   const { id } = await paramsPromise;
   try {
+    
     const lead = await prisma.lead.findUnique({ where: { id } });
     if (!lead || lead.isDeleted) {
       return new NextResponse("Lead not found", { status: 404 });
     }
+
+    const memberships = await prisma.membership.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = memberships.map((m) => m.teamId);
+    if (!teamIds.includes(lead.teamId)) {
+      return new NextResponse("Forbidden: Not part of this team", {
+        status: 403,
+      });
+    }
+
 
   } catch (err) {
     console.error("Failed to get one lead", err);
