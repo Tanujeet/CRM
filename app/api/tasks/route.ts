@@ -47,3 +47,55 @@ export async function POST(req: Request) {
       return new NextResponse("Failed to create task", { status: 500 });
     }
 }
+
+
+export async function GET(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+  try {
+    const { searchParams } = new URL(req.url);
+    const teamId = searchParams.get("teamId");
+    const leadId = searchParams.get("leadId");
+    const assignedTo = searchParams.get("assignedTo");
+    const status = searchParams.get("status");
+    const dueDate = searchParams.get("dueDate");
+
+    const memberships = await prisma.membership.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = memberships.map((m) => m.teamId);
+    let allowedTeamIds = teamIds;
+    if (teamId) {
+      if (!teamIds.includes(teamId)) {
+        return new NextResponse("Forbidden: Not part of this team", {
+          status: 403,
+        });
+      }
+      allowedTeamIds = [teamId];
+    }
+    const query: any = {
+      teamId: { in: allowedTeamIds },
+      isDeleted: false,
+    };
+    if (leadId) query.leadId = leadId;
+    if (assignedTo) query.assignedTo = assignedTo;
+    if (status) query.status = status;
+    if (dueDate) query.dueDate = { lte: new Date(dueDate) };
+
+    const fetchTasks = await prisma.task.findMany({
+      where: query,
+      include: {
+        assignee: true,
+        lead: true,
+        team: true,
+      },
+    });
+    return NextResponse.json(fetchTasks);
+  } catch (err) {
+    console.error("Failed to fetch Tasks", err);
+    return new NextResponse("Failed to fetch Tasks", { status: 500 });
+  }
+}

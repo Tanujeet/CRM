@@ -62,7 +62,11 @@ export async function POST(req: Request) {
       select: { teamId: true },
     });
     const teamIds = memberships.map((m) => m.teamId);
-
+ if (teamId && !teamIds.includes(teamId)) {
+   return new NextResponse("Forbidden: Not part of this team", {
+     status: 403,
+   });
+ }
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
     });
