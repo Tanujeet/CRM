@@ -49,12 +49,52 @@ export async function PATCH(
     return new NextResponse("Unauthorized", { status: 403 });
   }
   const { id } = await paramsPromise;
+const { title, description, status, dueDate, assignedTo } = await req.json();
 
-  try {
-  } catch (err) {
-    console.error("Failed to update tasks", err);
-    return new NextResponse("Failed to update tasks", { status: 500 });
+try {
+  const task = await prisma.task.findUnique({ where: { id } });
+  if (!task) {
+    return new NextResponse("Task not found", { status: 404 });
   }
+
+  const memberships = await prisma.membership.findMany({
+    where: { userId },
+    select: { teamId: true },
+  });
+
+  const teamIds = memberships.map((m) => m.teamId);
+  if (!teamIds.includes(task.teamId)) {
+    return new NextResponse("Forbidden: Not part of this team", {
+      status: 403,
+    });
+  }
+  if (assignedTo) {
+    const assignedMembership = await prisma.membership.findFirst({
+      where: { userId: assignedTo, teamId: task.teamId },
+    });
+    if (!assignedMembership) {
+      return new NextResponse("Forbidden: Assignee not part of this team", {
+        status: 403,
+      });
+    }
+  }
+
+  const updateData: any = {};
+  if (title !== undefined) updateData.title = title;
+  if (description !== undefined) updateData.description = description;
+  if (status !== undefined) updateData.status = status;
+  if (dueDate !== undefined) updateData.dueDate = dueDate;
+  if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
+
+  const updateTask = await prisma.task.update({
+    where: { id },
+    data: updateData,
+  });
+  return NextResponse.json(updateTask);
+} catch (err) {
+  console.error("Failed to update tasks", err);
+  return new NextResponse("Failed to update tasks", { status: 500 });
+}
 }
 
 export async function DELETE(
