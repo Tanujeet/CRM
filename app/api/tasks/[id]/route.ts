@@ -108,9 +108,30 @@ export async function DELETE(
   }
   const { id } = await paramsPromise;
 
-  try {
-  } catch (err) {
-    console.error("Failed to delete tasks", err);
-    return new NextResponse("Failed to delete one tasks", { status: 500 });
-  }
+    try {
+      const task = await prisma.task.findUnique({ where: { id } });
+      if (!task) {
+        return new NextResponse("Task not found", { status: 404 });
+      }
+      const memberships = await prisma.membership.findMany({
+        where: { userId },
+        select: { teamId: true },
+      });
+
+      const teamIds = memberships.map((m) => m.teamId);
+      if (!teamIds.includes(task.teamId)) {
+        return new NextResponse("Forbidden: Not part of this team", {
+          status: 403,
+        });
+      }
+
+      const deleteTask = await prisma.task.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+      return NextResponse.json(deleteTask);
+    } catch (err) {
+      console.error("Failed to delete tasks", err);
+      return new NextResponse("Failed to delete one tasks", { status: 500 });
+    }
 }
