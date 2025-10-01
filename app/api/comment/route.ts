@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { errorToJSON } from "next/dist/server/render";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -50,12 +49,32 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const { userId } = await auth();
+
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
+
   try {
-  } catch (err) {
-    console.error("Failed to fetch comments", err);
-    return new NextResponse("Failed to fetch comment", { status: 500 });
+    const { searchParams } = new URL(req.url);
+    const leadId = searchParams.get("leadId");
+    const taskId = searchParams.get("taskId");
+
+    const comments = await prisma.comment.findMany({
+      where: {
+        leadId: leadId || undefined,
+        taskId: taskId || undefined,
+      },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(comments);
+  } catch (error) {
+    console.error("GET_COMMENTS_ERROR", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
