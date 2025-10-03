@@ -82,7 +82,7 @@ export async function DELETE(
   const { id } = await paramsPromise;
   try {
   } catch (err) {
-    console.error("Failed to fetch one comment", err);
-    return new NextResponse("Failed to fetch one comment", { status: 500 });
+    console.error("Failed to delete comment", err);
+    return new NextResponse("Failed to delete comment", { status: 500 });
   }
 }
