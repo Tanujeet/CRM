@@ -31,6 +31,7 @@ export async function GET(
   }
 }
 
+
 export async function PATCH(
   req: Request,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
@@ -40,7 +41,25 @@ export async function PATCH(
     return new NextResponse("Unauthorized", { status: 403 });
   }
   const { id } = await paramsPromise;
+  const { content } = await req.json();
+  if (!content || content.trim().length === 0) {
+    return new NextResponse("Content cannot be empty", { status: 400 });
+  }
   try {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      return new NextResponse("Comment not found", { status: 404 });
+    }
+    if (comment.userId !== userId) {
+      return new NextResponse("Forbidden: Not your comment", { status: 403 });
+    }
+
+    const updateCommnet = await prisma.comment.update({
+      where: { id },
+      data: { content },
+    });
+
+    return NextResponse.json(updateCommnet);
   } catch (err) {
     console.error("Failed to fetch one comment", err);
     return new NextResponse("Failed to fetch one comment", { status: 500 });
