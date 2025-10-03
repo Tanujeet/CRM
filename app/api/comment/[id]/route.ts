@@ -68,9 +68,6 @@ export async function PATCH(
 
 
 
-
-
-
 export async function DELETE(
   req: Request,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
@@ -79,8 +76,23 @@ export async function DELETE(
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 403 });
   }
+
   const { id } = await paramsPromise;
+
+  const { searchParams } = new URL(req.url);
+  const commentId = searchParams.get("commentId");
+
   try {
+    const comment = await prisma.comment.findUnique({ where: { id } });
+    if (!comment) {
+      return new NextResponse("Commment not found", { status: 404 });
+    }
+    if (comment.userId !== userId) {
+      return new NextResponse("Forbidden: Not your comment", { status: 403 });
+    }
+
+    const deleteComment = await prisma.comment.delete({ where: { id } });
+    return NextResponse.json(deleteComment);
   } catch (err) {
     console.error("Failed to delete comment", err);
     return new NextResponse("Failed to delete comment", { status: 500 });
