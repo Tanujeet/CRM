@@ -61,8 +61,8 @@ export async function PATCH(
 
     return NextResponse.json(updateCommnet);
   } catch (err) {
-    console.error("Failed to fetch one comment", err);
-    return new NextResponse("Failed to fetch one comment", { status: 500 });
+    console.error("Failed to update comment", err);
+    return new NextResponse("Failed to update comment", { status: 500 });
   }
 }
 
