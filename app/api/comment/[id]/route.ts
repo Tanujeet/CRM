@@ -2,7 +2,10 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -10,27 +13,21 @@ export async function GET(req: Request) {
   }
 
   try {
-    const { searchParams } = new URL(req.url);
-    const leadId = searchParams.get("leadId");
-    const taskId = searchParams.get("taskId");
-
-    const comments = await prisma.comment.findMany({
-      where: {
-        leadId: leadId || undefined,
-        taskId: taskId || undefined,
-      },
+    const comment = await prisma.comment.findUnique({
+      where: { id: params.id },
       include: {
-        user: true, // if you want user details with each comment
-      },
-      orderBy: {
-        createdAt: "desc",
+        user: true,
       },
     });
 
-    return NextResponse.json(comments);
+    if (!comment) {
+      return new NextResponse("Comment not found", { status: 404 });
+    }
+
+    return NextResponse.json(comment);
   } catch (error) {
-    console.error("GET_COMMENTS_ERROR", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("GET_COMMENT_BY_ID_ERROR", error);
+    return new NextResponse("Failed to fetch one comment", { status: 500 });
   }
 }
 
