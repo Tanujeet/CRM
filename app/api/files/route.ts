@@ -12,3 +12,17 @@ export async function POST(req: Request) {
     return new NextResponse("Failed to create file", { status: 500 });
   }
 }
+
+
+
+export async function GET(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorozed", { status: 403 });
+  }
+  try {
+  } catch (err) {
+    console.error("Failed to fetch file", err);
+    return new NextResponse("Failed to fetch file", { status: 500 });
+  }
+}
