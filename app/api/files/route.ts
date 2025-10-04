@@ -1,3 +1,4 @@
+import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -6,14 +7,17 @@ export async function POST(req: Request) {
   if (!userId) {
     return new NextResponse("Unauthorozed", { status: 403 });
   }
+  const { url } = await req.json();
   try {
+    const newFile = await prisma.file.create({
+      data: { url, uploadedBy: userId },
+    });
+    return NextResponse.json(newFile);
   } catch (err) {
     console.error("Failed to create file", err);
     return new NextResponse("Failed to create file", { status: 500 });
   }
 }
-
-
 
 export async function GET(req: Request) {
   const { userId } = await auth();
