@@ -27,3 +27,17 @@ export async function PATCH(req: Request) {
     return new NextResponse("failed to update file", { status: 500 });
   }
 }
+
+
+export async function DELETE(req: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new NextResponse("Unauthorized", { status: 403 });
+  }
+
+  try {
+  } catch (err) {
+    console.error("Failed to update file", err);
+    return new NextResponse("failed to update file", { status: 500 });
+  }
+}
