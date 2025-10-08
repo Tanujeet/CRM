@@ -1,3 +1,4 @@
+import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -11,6 +12,16 @@ export async function GET(
   }
   const { id } = await paramsPromise;
   try {
+    const fetchActivity = await prisma.activity.findUnique({ where: { id } });
+    if (!fetchActivity) {
+      return new NextResponse("Activity not found", { status: 404 });
+    }
+
+    if (fetchActivity.createdBy !== userId) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    return NextResponse.json(fetchActivity);
   } catch (err) {
     console.error("failed to fetch a acitivity", err);
     return new NextResponse("failed to fetch a acitivity", { status: 500 });
