@@ -28,6 +28,7 @@ export async function GET(
   }
 }
 
+
 export async function PATCH(
   req: Request,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
@@ -37,12 +38,43 @@ export async function PATCH(
     return new NextResponse("Unauthorized", { status: 403 });
   }
   const { id } = await paramsPromise;
+  const { type, notes, leadId } = await req.json();
   try {
+    const fetchActivity = await prisma.activity.findUnique({ where: { id } });
+    if (!fetchActivity) {
+      return new NextResponse("Activity not found", { status: 404 });
+    }
+
+    if (fetchActivity.createdBy !== userId) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    const updateActivity = await prisma.activity.update({
+      where: { id },
+      data: {
+        type,
+        notes,
+        leadId,
+      },
+    });
+    return NextResponse.json(updateActivity);
   } catch (err) {
     console.error("failed to update acitivity", err);
     return new NextResponse("failed to update acitivity", { status: 500 });
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 export async function DELETE(
   req: Request,
