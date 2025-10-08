@@ -67,15 +67,6 @@ export async function PATCH(
 
 
 
-
-
-
-
-
-
-
-
-
 export async function DELETE(
   req: Request,
   { params: paramsPromise }: { params: Promise<{ id: string }> }
@@ -86,20 +77,19 @@ export async function DELETE(
   }
   const { id } = await paramsPromise;
   try {
-       const fetchActivity = await prisma.activity.findUnique({
-         where: { id },
-       });
-       if (!fetchActivity) {
-         return new NextResponse("Activity not found", { status: 404 });
-       }
+    const fetchActivity = await prisma.activity.findUnique({
+      where: { id },
+    });
+    if (!fetchActivity) {
+      return new NextResponse("Activity not found", { status: 404 });
+    }
 
-       if (fetchActivity.createdBy !== userId) {
-         return new NextResponse("Forbidden", { status: 403 });
-       }
+    if (fetchActivity.createdBy !== userId) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
 
-       const deleteActivity = await prisma.activity.delete({ where: { id } });
-       return NextResponse.json(deleteActivity);
-
+    const deleteActivity = await prisma.activity.delete({ where: { id } });
+    return NextResponse.json(deleteActivity);
   } catch (err) {
     console.error("failed to delete acitivity", err);
     return new NextResponse("failed to delete acitivity", { status: 500 });
