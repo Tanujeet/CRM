@@ -1,6 +1,10 @@
+"use client";
+import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
 import { Search } from "lucide-react";
 
 const Navbar = () => {
+  const { user, isLoaded } = useUser();
   return (
     <nav className="border border-b-black p-4">
       <div className="relative w-[400px]">
@@ -13,6 +17,17 @@ const Navbar = () => {
           placeholder="Search"
           className="border border-black rounded-2xl p-2 pl-10 w-full focus:outline-none"
         />
+      </div>
+      <div className="flex items-center gap-3">
+        {user && (
+          <Image
+            src={user.imageUrl}
+            alt="User Avatar"
+            width={40}
+            height={40}
+            className="rounded-full border"
+          />
+        )}
       </div>
     </nav>
   );
