@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from "@clerk/nextjs";
+import { SignedIn, UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { Search } from "lucide-react";
 
@@ -21,13 +21,9 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-3">
           {user && (
-            <Image
-              src={user.imageUrl}
-              alt="User Avatar"
-              width={40}
-              height={40}
-              className="rounded-full border"
-            />
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
           )}
         </div>
       </div>
