@@ -1,7 +1,10 @@
 "use client";
+
+import { SignedIn, UserButton, useUser } from "@clerk/nextjs";
 import { Search, Bell } from "lucide-react";
 
 export default function Navbar() {
+  const { user } = useUser();
   return (
     <nav className="sticky top-0 z-10 flex h-20 items-center justify-between bg-white/80 px-8 backdrop-blur-md border-b border-gray-200">
       <div className="relative">
@@ -21,8 +24,12 @@ export default function Navbar() {
           size={20}
           className="cursor-pointer text-gray-500 hover:text-gray-900"
         />
-        <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">
-          AD
+        <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full font-semibold text-white">
+          {user && (
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+          )}
         </div>
       </div>
     </nav>
