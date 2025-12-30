@@ -1,6 +1,12 @@
-import Navbar from "@/components/navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Page = () => {
+  const data = [
+    { leads: "1250" },
+    { Task: "48" },
+    { customers: "345" },
+    { Revenue: "1.2" },
+  ];
   return (
     <main>
       <section>
@@ -12,6 +18,18 @@ const Page = () => {
             <p className="mt-4 font-light">Friday,October 10,2025</p>
           </div>
         </header>
+        <div>
+          {data.map((datas, idx) => (
+            <Card key={idx}>
+              <CardHeader>
+                <CardTitle>Card Title</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Card Content</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
     </main>
   );
